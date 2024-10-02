@@ -151,57 +151,57 @@ mode = st.selectbox("Select Mode:", ["Automatic", "Manual Time Selection"])
 # Get the earliest gym time data within operational hours
 earliest_times = get_earliest_time()
 
-if mode == "Automatic":
-    # Display current crowd based on server time
-    st.header("Current Gym Crowd Levels")
-    current_crowd, current_day, current_hour = get_current_crowd(df)
+#if mode == "Automatic":
+#    # Display current crowd based on server time
+#    st.header("Current Gym Crowd Levels")
+#    current_crowd, current_day, current_hour = get_current_crowd(df)
+#
+#    # Check if the current time is outside operational hours
+#    if is_gym_closed(current_day, current_hour):
+#        st.write("The gym is closed! Here are the operating hours:")
+#        st.write("""
+#        **Operating Hours:**
+#        - **Monday - Thursday:** 6 AM - 10 PM
+#        - **Friday:** 6 AM - 8 PM
+#        - **Saturday:** 9 AM - 8 PM
+#        - **Sunday:** 11 AM - 10 PM
+#        """)
+#    else:
+#        if current_crowd is not None:
+#            # Check if the crowd data indicates closure
+#            if current_crowd == 'X':
+#                st.write("The gym is closed!")
+#            else:
+#                st.write(f"The current gym crowd is roughly {int(current_crowd)} people out of a maximum capacity of 60.")
+#                fig = create_scatter_plot(int(current_crowd))
+#                st.pyplot(fig)
+#        else:
+#            st.write("No data available for this time.")
+#
+#elif mode == "Manual Time Selection":
+# User input: Select day and time
+selected_day = st.selectbox("Select Day:", day_columns)
 
-    # Check if the current time is outside operational hours
-    if is_gym_closed(current_day, current_hour):
-        st.write("The gym is closed! Here are the operating hours:")
-        st.write("""
-        **Operating Hours:**
-        - **Monday - Thursday:** 6 AM - 10 PM
-        - **Friday:** 6 AM - 8 PM
-        - **Saturday:** 9 AM - 8 PM
-        - **Sunday:** 11 AM - 10 PM
-        """)
+# Set the default selected time to the earliest time for the selected day
+default_time = earliest_times.get(selected_day, df['Time'].min())
+selected_time = st.selectbox("Select Time:", df['Time'].unique(), index=list(df['Time'].unique()).index(default_time))
+
+st.header("Gym Crowd Levels")
+
+# Get the manually selected crowd data
+manual_crowd = df.loc[df['Time'] == selected_time, selected_day].values
+
+if manual_crowd.size > 0:
+    manual_crowd_value = manual_crowd[0]  # Get the first value
+    # Check if the gym is closed
+    if manual_crowd_value == 'X' or is_gym_closed(selected_day, selected_time):
+        st.write("The gym is closed!")
     else:
-        if current_crowd is not None:
-            # Check if the crowd data indicates closure
-            if current_crowd == 'X':
-                st.write("The gym is closed!")
-            else:
-                st.write(f"The current gym crowd is roughly {int(current_crowd)} people out of a maximum capacity of 60.")
-                fig = create_scatter_plot(int(current_crowd))
-                st.pyplot(fig)
-        else:
-            st.write("No data available for this time.")
-
-elif mode == "Manual Time Selection":
-    # User input: Select day and time
-    selected_day = st.selectbox("Select Day:", day_columns)
-    
-    # Set the default selected time to the earliest time for the selected day
-    default_time = earliest_times.get(selected_day, df['Time'].min())
-    selected_time = st.selectbox("Select Time:", df['Time'].unique(), index=list(df['Time'].unique()).index(default_time))
-
-    st.header("Gym Crowd Levels")
-
-    # Get the manually selected crowd data
-    manual_crowd = df.loc[df['Time'] == selected_time, selected_day].values
-
-    if manual_crowd.size > 0:
-        manual_crowd_value = manual_crowd[0]  # Get the first value
-        # Check if the gym is closed
-        if manual_crowd_value == 'X' or is_gym_closed(selected_day, selected_time):
-            st.write("The gym is closed!")
-        else:
-            st.write(f"The gym crowd at {selected_time} on {selected_day} is {int(manual_crowd_value)} people out of a maximum capacity of 60.")
-            fig = create_scatter_plot(int(manual_crowd_value))
-            st.pyplot(fig)
-    else:
-        st.write("No crowd data available for the selected time.")
+        st.write(f"The gym crowd at {selected_time} on {selected_day} is {int(manual_crowd_value)} people out of a maximum capacity of 60.")
+        fig = create_scatter_plot(int(manual_crowd_value))
+        st.pyplot(fig)
+else:
+    st.write("No crowd data available for the selected time.")
 
 
 # Footer credit
